@@ -1,0 +1,34 @@
+<!-- public/sparkle.svg -->
+<!--
+  Union Sparkle — lightweight SVG accent
+  - Size: 24x24 (scales cleanly)
+  - Colors: teal → cyan gradient to match Union brand
+  - Use as <img src="/sparkle.svg" /> or as CSS background-image
+-->
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+     xmlns="http://www.w3.org/2000/svg" role="img" aria-label="sparkle">
+  <defs>
+    <linearGradient id="u-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14D2C5"/>
+      <stop offset="1" stop-color="#A8ECFD"/>
+    </linearGradient>
+    <filter id="u-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer diamond flare -->
+  <path d="M12 1.5 L15.8 8.2 L22.5 12 L15.8 15.8 L12 22.5 L8.2 15.8 L1.5 12 L8.2 8.2 Z"
+        fill="url(#u-grad)" opacity="0.35" filter="url(#u-glow)"/>
+
+  <!-- Inner 4-point star -->
+  <path d="M12 4.5 L13.9 10.1 L19.5 12 L13.9 13.9 L12 19.5 L10.1 13.9 L4.5 12 L10.1 10.1 Z"
+        fill="url(#u-grad)" opacity="0.75" filter="url(#u-glow)"/>
+
+  <!-- Micro highlight -->
+  <circle cx="9.1" cy="8.9" r="1.1" fill="#FFFFFF" opacity="0.55"/>
+</svg>
