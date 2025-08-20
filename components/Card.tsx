@@ -1,94 +1,207 @@
 // components/Card.tsx
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import Buttons from "./Buttons";
+import { resolveAvatar, initialAvatarURL } from "@/app/lib/avatar";
+import { BRAND, FONTS, TIMING, TEAM_WHITELIST, getHeroDescription } from "@/app/lib/constants";
 
 type CardProps = {
+  /** X handle without @ (can include @; we normalize anyway) */
   handle: string;
-  isTeam?: boolean;
 };
 
-export default function Card({ handle, isTeam }: CardProps) {
-  const avatarUrl = `https://unavatar.io/x/${handle}`;
-  const description = isTeam
-    ? `Congratulations ${handle}, you are a core Union builder. Your vision and leadership drive the Union mission forward — shaping the future of interoperability.`
-    : `Congratulations ${handle}, you are a chosen Union Hero. Your contributions, interactions, and energy strengthen the Union ecosystem. Keep building with us.`;
+const normalize = (s: string) => String(s ?? "").trim().replace(/^@/, "").toLowerCase();
+
+/**
+ * Union Hero Card
+ * - 3:5 aspect, glowing border, centered avatar
+ * - Title: “Union Hero’s Card”
+ * - Description: 4–5 lines (team gets special golden variant)
+ * - On tap/click: light haptic + tiny shake
+ * - Avatar: fast optimistic URL, then resilient multi-fallback (→ /pfp.png)
+ */
+export default function Card({ handle }: CardProps) {
+  const h = normalize(handle);
+  const isTeam = TEAM_WHITELIST.has(h);
+
+  // Avatar pipeline: start with optimistic URL to paint ASAP, then resolve and crossfade
+  const [avatar, setAvatar] = useState<string>(() => initialAvatarURL(h));
+  const [resolved, setResolved] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    // Race-based resolver with timeout & preload
+    resolveAvatar(h, { timeoutMs: TIMING.AVATAR_TIMEOUT_MS, preload: true }).then((url) => {
+      if (!alive) return;
+      setAvatar(url);
+      setResolved(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [h]);
+
+  // Description text (strict to brand fonts/colors from constants)
+  const description = useMemo(() => getHeroDescription(h, isTeam), [h, isTeam]);
+
+  // Haptic + little shake on click
+  const onTap = () => {
+    try {
+      (navigator as any).vibrate?.(20);
+    } catch {}
+  };
 
   return (
-    <motion.div
-      className={`relative w-[280px] md:w-[340px] aspect-[3/5] rounded-2xl shadow-lg p-4 flex flex-col items-center justify-between ${
-        isTeam
-          ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 border-4 border-yellow-300"
-          : "bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-dark)] to-black border border-[var(--color-accent)]"
-      }`}
-      whileTap={{ scale: 0.95, rotate: 1 }}
-      animate={{ boxShadow: ["0 0 20px rgba(168,236,253,0.7)", "0 0 40px rgba(168,236,253,0.9)"] }}
-      transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-    >
-      {/* Avatar */}
-      <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--color-accent)] mb-4">
-        <Image
-          src={avatarUrl}
-          alt={`${handle} avatar`}
-          width={96}
-          height={96}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "/pfp.png";
+    <div className="flex flex-col items-center gap-6">
+      {/* Card */}
+      <motion.article
+        aria-label={`Union Hero Card for @${h}`}
+        className="relative rounded-2xl overflow-hidden"
+        style={{
+          width: "min(360px, 86vw)",
+          aspectRatio: "3 / 5",
+          background: isTeam
+            ? "linear-gradient(165deg, rgba(255,215,0,0.22), rgba(0,0,0,0.35)), radial-gradient(120% 80% at 90% -10%, rgba(255,215,0,0.18), transparent 60%), #101826"
+            : "linear-gradient(165deg, rgba(168,236,253,0.10), rgba(0,0,0,0.35)), radial-gradient(120% 80% at 90% -10%, rgba(168,236,253,0.12), transparent 60%), #101826",
+          border: isTeam ? "2px solid rgba(255,215,0,0.7)" : `1px solid ${BRAND.BORDER_HARD}`,
+          boxShadow: isTeam
+            ? "0 0 60px rgba(255,215,0,0.35), inset 0 0 0 1px rgba(255,215,0,0.35)"
+            : "0 0 50px rgba(168,236,253,0.18), inset 0 0 0 1px rgba(168,236,253,0.22)",
+        }}
+        whileTap={{ scale: 0.98, rotate: 0.3 }}
+        onTap={onTap}
+        animate={{
+          boxShadow: isTeam
+            ? [
+                "0 0 24px rgba(255,215,0,0.25), inset 0 0 0 1px rgba(255,215,0,0.35)",
+                "0 0 60px rgba(255,215,0,0.45), inset 0 0 0 1px rgba(255,215,0,0.35)",
+                "0 0 24px rgba(255,215,0,0.25), inset 0 0 0 1px rgba(255,215,0,0.35)",
+              ]
+            : [
+                "0 0 20px rgba(168,236,253,0.18), inset 0 0 0 1px rgba(168,236,253,0.22)",
+                "0 0 44px rgba(168,236,253,0.30), inset 0 0 0 1px rgba(168,236,253,0.22)",
+                "0 0 20px rgba(168,236,253,0.18), inset 0 0 0 1px rgba(168,236,253,0.22)",
+              ],
+        }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {/* Diagonal shine sweep */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute -inset-[46%]"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)",
+            transform: "rotate(35deg)",
           }}
+          animate={{ x: ["-60%", "120%"] }}
+          transition={{ repeat: Infinity, duration: 5.2, ease: "easeInOut", delay: 0.6 }}
         />
-      </div>
 
-      {/* Title */}
-      <h2
-        className={`text-xl font-bold mb-2 ${
-          isTeam ? "text-black" : "text-[var(--color-text)]"
-        }`}
-      >
-        Union Hero’s Card
-      </h2>
+        {/* Header row */}
+        <div className="flex items-center justify-between px-4 pt-3">
+          <div
+            style={{
+              fontFamily: FONTS.HEADING,
+              color: isTeam ? BRAND.GOLD : BRAND.ACCENT,
+              letterSpacing: ".02em",
+              fontWeight: 700,
+              fontSize: 14,
+              opacity: 0.95,
+            }}
+          >
+            @{h}
+          </div>
+          <div
+            className="px-2 py-1 rounded-md"
+            style={{
+              fontFamily: FONTS.BODY,
+              border: `1px solid ${isTeam ? "rgba(255,215,0,0.45)" : BRAND.BORDER_SOFT}`,
+              color: isTeam ? BRAND.GOLD : BRAND.TEXT,
+              fontSize: 12,
+              background: "rgba(0,0,0,0.2)",
+            }}
+          >
+            {isTeam ? "UNION TEAM" : "UNION"}
+          </div>
+        </div>
 
-      {/* Description */}
-      <p
-        className={`text-center text-sm leading-snug px-2 ${
-          isTeam ? "text-black" : "text-[var(--color-muted)]"
-        }`}
-      >
-        {description}
-      </p>
-
-      {/* Buttons */}
-      <div className="flex flex-col gap-3 w-full mt-4">
-        <motion.a
-          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            `Just revealed my Union Hero Cards! 🎉
-
-This is my proof of participation on @union_build 🐳
-
-You can reveal yours at: union-hero-cards.vercel.app
-
-Every Transaction, Tweet, and Contribution matters at Union 💪`
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full text-center py-2 rounded-lg font-bold text-white bg-[var(--color-accent)]"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
+        {/* Avatar well */}
+        <div
+          className="mx-auto mt-4 rounded-xl overflow-hidden"
+          style={{
+            width: "84%",
+            aspectRatio: "1 / 1",
+            border: `1px solid ${isTeam ? "rgba(255,215,0,0.55)" : BRAND.BORDER_HARD}`,
+            background: "#0F141C",
+            boxShadow: isTeam
+              ? "inset 0 0 40px rgba(255,215,0,0.15)"
+              : "inset 0 0 40px rgba(168,236,253,0.12)",
+          }}
         >
-          Share on X
-        </motion.a>
+          {/* Blur placeholder behind image */}
+          <div
+            aria-hidden
+            className="w-full h-full"
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(40% 40% at 50% 50%, rgba(168,236,253,0.08), transparent 70%)",
+              filter: "blur(18px)",
+            }}
+          />
+          {/* Actual avatar */}
+          <motion.img
+            key={avatar} // force crossfade when URL changes
+            src={avatar}
+            alt={`@${h} avatar`}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            onError={(e) => {
+              // final safety net; avatar.ts already falls back to /pfp.png
+              (e.currentTarget as HTMLImageElement).src = "/pfp.png";
+            }}
+            className="w-full h-full object-cover"
+            initial={{ opacity: 0.0, scale: 1.02 }}
+            animate={{ opacity: 1, scale: 1.0 }}
+            transition={{ duration: resolved ? 0.18 : 0.36, ease: "easeOut" }}
+          />
+        </div>
 
-        <button
-          className="w-full text-center py-2 rounded-lg font-medium bg-[var(--color-muted)] text-black"
-          onClick={() =>
-            navigator.clipboard.writeText(
-              `${window.location.origin}/${handle}`
-            )
-          }
+        {/* Title */}
+        <h2
+          className="text-center mt-3"
+          style={{
+            fontFamily: FONTS.HEADING,
+            fontWeight: 700,
+            fontSize: 20,
+            color: isTeam ? BRAND.GOLD : BRAND.ACCENT,
+            letterSpacing: ".02em",
+          }}
         >
-          Copy Your Card Link
-        </button>
-      </div>
-    </motion.div>
+          Union Hero’s Card
+        </h2>
+
+        {/* Description */}
+        <p
+          className="px-4 mt-2 text-center"
+          style={{
+            fontFamily: FONTS.BODY,
+            color: BRAND.TEXT,
+            fontSize: 14.5,
+            lineHeight: 1.55,
+          }}
+        >
+          {description}
+        </p>
+      </motion.article>
+
+      {/* CTAs */}
+      <Buttons handle={h} />
+    </div>
   );
 }
