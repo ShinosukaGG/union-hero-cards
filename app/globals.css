@@ -29,6 +29,9 @@
   /* Font families from next/font/local (DO NOT override with @import) */
   --uc-font-heading: var(--font-supermolot);
   --uc-font-body:    var(--font-jetbrains);
+  --font-supermolot: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font-jetbrains: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+   
 }
 
 /* ── Base / Reset ───────────────────────────────────────────────────────── */
