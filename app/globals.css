@@ -1,127 +1,243 @@
-/* app/globals.css */
+/* app/globals.css
+   ───────────────────────────────────────────────────────────────────────────
+   Union Hero Cards — Global Styles, Brand Tokens & Keyframes
+   Strict brand: ONLY these colors & fonts are used.
+   Fonts are injected by app/fonts.ts as:
+     --font-supermolot  (headings)
+     --font-jetbrains    (body)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Tailwind layers (keep first) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Brand Kit Fonts */
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
-@font-face {
-  font-family: "Supermolot";
-  src: url("/fonts/supermolot.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-}
-
+/* ── Brand Tokens (CSS variables) ───────────────────────────────────────── */
 :root {
-  --font-jetbrains: "JetBrains Mono", monospace;
-  --font-supermolot: "Supermolot", sans-serif;
+  /* Colors (strict) */
+  --uc-bg:        #0D1117;   /* page background */
+  --uc-card:      #101826;   /* card surface */
+  --uc-accent:    #A8ECFD;   /* primary accent/glow */
+  --uc-gold:      #FFD700;   /* team/golden variant */
+  --uc-text:      #C7D3E3;   /* default text */
+  --uc-muted:     #9FB1C6;   /* secondary text */
 
-  --color-bg-dark: #0d1117;
-  --color-bg-card: #101826;
-  --color-accent: #a8ecfd;
-  --color-gold: #ffd700;
-  --color-text: #c7d3e3;
-  --color-text-muted: #9fb1c6;
+  /* Derived borders from accent (safe rgba) */
+  --uc-border-soft: rgba(168, 236, 253, 0.25);
+  --uc-border-hard: rgba(168, 236, 253, 0.40);
+
+  /* Font families from next/font/local (DO NOT override with @import) */
+  --uc-font-heading: var(--font-supermolot);
+  --uc-font-body:    var(--font-jetbrains);
 }
 
-html,
+/* ── Base / Reset ───────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
-  padding: 0;
   margin: 0;
-  font-family: var(--font-jetbrains);
-  background: radial-gradient(
-      circle at 25% 25%,
-      rgba(168, 236, 253, 0.08) 0%,
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 80% 40%,
-      rgba(168, 236, 253, 0.06) 0%,
-      transparent 45%
-    ),
-    #0d1117;
-  color: var(--color-text);
+  font-family: var(--uc-font-body);
+  color: var(--uc-text);
+  background: var(--uc-bg);
   overflow-x: hidden;
 }
 
-/* Header */
+/* Selection */
+::selection { background: var(--uc-accent); color: #000; }
+
+/* Utility text color (if needed by components) */
+.text-accent { color: var(--uc-accent) !important; }
+
+/* ── Cosmic Background (CSS-only fallback; enhanced by <Background />) ──── */
+/* If the React Background component fails to mount, this still looks good. */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(1200px 800px at 80% -10%, rgba(168,236,253,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #0B0F16 0%, var(--uc-bg) 35%, var(--uc-bg) 100%);
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(700px 500px at 10% 40%, rgba(168,236,253,0.05), transparent 60%),
+    radial-gradient(900px 600px at 95% 85%, rgba(168,236,253,0.04), transparent 70%);
+  mix-blend-mode: screen; opacity: .9;
+}
+
+/* Subtle grid structure (masked so it’s very faint) */
+.uc-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .25;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px, 60px 60px;
+  mask-image: radial-gradient(1000px 700px at 50% 20%, rgba(0,0,0,1) 30%, rgba(0,0,0,0.2) 100%);
+}
+
+/* ── Header (sticky glass) ─────────────────────────────────────────────── */
 header {
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(168, 236, 253, 0.2);
-  background: rgba(13, 17, 23, 0.8);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  border-bottom: 1px solid var(--uc-border-soft);
+  background: rgba(13, 17, 23, 0.80);
 }
 
-/* Search Bar */
-.search-bar {
+/* ── Search Bar (glow-on-type) ─────────────────────────────────────────── */
+.uc-search {
   width: 100%;
-  max-width: 480px;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: #101826;
-  border: 2px solid rgba(168, 236, 253, 0.4);
-  color: var(--color-accent);
-  font-family: var(--font-supermolot);
-  font-size: 1.1rem;
-  outline: none;
-  transition: all 0.3s ease;
+  max-width: 520px;
+  border-radius: 12px;
+  background: #0E141E;
+  border: 1px solid #253041;
+  overflow: hidden;
+  transition: box-shadow .6s ease, border-color .3s ease;
+}
+.uc-search.is-active {
+  box-shadow: 0 0 0 6px rgba(168,236,253,0.10);
+  border-color: var(--uc-accent);
+}
+.uc-input {
+  width: 100%; padding: .9rem 1.1rem; background: transparent; outline: none;
+  color: #E8ECF1; font-family: var(--uc-font-body); font-size: 15.5px;
 }
 
-.search-bar:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 20px rgba(168, 236, 253, 0.4);
+/* ── Unrevealed Card (3:5) — slow spin & diagonal shine ───────────────── */
+.uc-unrevealed {
+  width: min(360px, 86vw); aspect-ratio: 3/5;
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid #1E2633;
+  background:
+    radial-gradient(120% 80% at 80% -10%, rgba(168,236,253,0.08), transparent 60%),
+    linear-gradient(180deg, #131723, #0C1018);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  animation: ucSpinY 24s linear infinite;
+  position: relative;
+}
+.uc-unrevealed .uc-qmark {
+  font-family: var(--uc-font-heading);
+  font-weight: 700; letter-spacing: .02em;
+  font-size: clamp(72px, 16vw, 140px);
+  color: var(--uc-accent);
+  text-shadow: 0 0 24px rgba(168,236,253,0.45), 0 0 60px rgba(168,236,253,0.25);
+}
+.uc-shine {
+  position: absolute; inset: -46%; pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  transform: rotate(35deg);
+  animation: ucShineSweep 5.2s ease-in-out .6s infinite;
 }
 
-/* Spinning unrevealed card */
-.spin-card {
-  width: min(300px, 80vw);
-  aspect-ratio: 3/5;
-  border-radius: 1rem;
-  border: 2px dashed rgba(168, 236, 253, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 4rem;
-  color: var(--color-accent);
-  animation: slowspin 12s linear infinite;
+/* ── Card Glow Pulse (applied to the main revealed card) ───────────────── */
+.uc-cardGlow {
+  animation: ucGlow 2.6s ease-in-out infinite;
 }
 
-@keyframes slowspin {
-  from {
-    transform: rotateY(0deg);
-  }
-  to {
-    transform: rotateY(360deg);
-  }
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.uc-btn-primary {
+  background: linear-gradient(90deg, #1C2B3F, #152333);
+  color: var(--uc-accent);
+  font-family: var(--uc-font-heading); letter-spacing: .02em;
+  border: 1px solid var(--uc-border-soft);
+  box-shadow: 0 0 20px rgba(168,236,253,0.25), inset 0 0 0 1px var(--uc-border-soft);
+}
+.uc-btn-primary.heartbeat { animation: ucHeartbeat 1.6s ease-in-out infinite; }
+
+.uc-btn-secondary {
+  background: var(--uc-card);
+  color: var(--uc-muted);
+  font-family: var(--uc-font-heading); letter-spacing: .02em;
+  border: 1px solid rgba(159,177,198,0.25);
 }
 
-/* Easter Egg popups */
-.easter-popup {
+/* ── Easter Eggs: ZKGM pop-ups ─────────────────────────────────────────── */
+.uc-egg {
   position: absolute;
-  font-family: var(--font-supermolot);
-  font-size: 0.85rem;
-  color: var(--color-accent);
+  font-family: var(--uc-font-heading);
+  font-weight: 700;
+  font-size: clamp(10px, 2vw, 22px);
+  color: var(--uc-accent);
+  text-shadow: 0 0 6px rgba(168,236,253,0.7);
+  user-select: none;
   pointer-events: none;
-  animation: floatUp 3s ease-in-out forwards;
+  animation: ucEggFade 2.5s ease forwards;
 }
 
-@keyframes floatUp {
-  0% {
-    opacity: 0;
-    transform: translateY(0px) scale(0.8);
-  }
-  10% {
-    opacity: 1;
-    transform: translateY(-5px) scale(1);
-  }
-  90% {
-    opacity: 1;
-    transform: translateY(-30px) scale(1.05);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-40px) scale(1.1);
-  }
+/* ── Team Golden Aura (extra flare around card) ────────────────────────── */
+.uc-teamAura {
+  position: relative; z-index: 1;
 }
+.uc-teamAura::before {
+  content: ""; position: absolute; inset: -18px; border-radius: 20px; z-index: -1;
+  background: radial-gradient(circle, rgba(255,215,0,0.28) 0%, transparent 70%);
+  animation: ucAura 3s ease-in-out infinite;
+}
+
+/* ── Keyframes (ALL animations here) ───────────────────────────────────── */
+/* Unrevealed card slow Y-rotation */
+@keyframes ucSpinY {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+/* Diagonal shine sweep across surfaces */
+@keyframes ucShineSweep {
+  0%   { transform: rotate(35deg) translateX(-60%); }
+  60%  { transform: rotate(35deg) translateX(80%); }
+  100% { transform: rotate(35deg) translateX(120%); }
+}
+
+/* Gentle glow pulse for cards */
+@keyframes ucGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(168,236,253,0.18), inset 0 0 0 1px rgba(168,236,253,0.22); }
+  50%      { box-shadow: 0 0 44px rgba(168,236,253,0.30), inset 0 0 0 1px rgba(168,236,253,0.22); }
+}
+
+/* Heartbeat (Share button) */
+@keyframes ucHeartbeat {
+  0%, 40%, 80%, 100% { transform: scale(1); filter: brightness(1); }
+  20%, 60%           { transform: scale(1.06); filter: brightness(1.15); }
+}
+
+/* ZKGM popup fade/scale */
+@keyframes ucEggFade {
+  0%   { opacity: 0; transform: translateY(0) scale(.6); }
+  15%  { opacity: 1; transform: translateY(-4px) scale(1); }
+  85%  { opacity: 1; transform: translateY(-22px) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-30px) scale(1.08); }
+}
+
+/* Team aura breathing */
+@keyframes ucAura {
+  0%, 100% { opacity: .60; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.07); }
+}
+
+/* Aurora sweep used by .uc-aurora (in Background.tsx too) */
+@keyframes ucAuroraSweep {
+  0%   { transform: translate3d(-15%, -10%, 0) rotate(12deg); opacity: .25; }
+  50%  { transform: translate3d(  5%,   0%, 0) rotate(12deg); opacity: .35; }
+  100% { transform: translate3d(-15%, -10%, 0) rotate(12deg); opacity: .25; }
+}
+
+/* Micro wiggle (optional for playful feedback) */
+@keyframes ucWiggle {
+  0%,100% { transform: translateX(0) rotate(0); }
+  25%     { transform: translateX(-2px) rotate(-1.2deg); }
+  75%     { transform: translateX( 2px) rotate( 1.2deg); }
+}
+.uc-wiggle { animation: ucWiggle .4s ease-in-out; }
+
+/* ── Reduced Motion ────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .uc-unrevealed,
+  .uc-shine,
+  .uc-cardGlow,
+  .uc-btn-primary.heartbeat,
+  .uc-egg,
+  .uc-teamAura::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  }
