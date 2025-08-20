@@ -4,8 +4,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Buttons from "./Buttons";
-import { resolveAvatar, initialAvatarURL } from "@/app/lib/avatar";
-import { BRAND, FONTS, TIMING, TEAM_WHITELIST, getHeroDescription } from "@/app/lib/constants";
+import { resolveAvatar, initialAvatarURL } from "@/lib/avatar";
+import { BRAND, FONTS, TIMING, TEAM_WHITELIST, getHeroDescription } from "@/lib/constants";
 
 type CardProps = {
   /** X handle without @ (can include @; we normalize anyway) */
