@@ -1,137 +1,94 @@
 // components/Card.tsx
 "use client";
 
-import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
-export type CardData = {
-  handle: string;                 // normalized (lowercase, no leading @)
-  displayName?: string | null;    // optional nice name
-  avatar?: string | null;         // URL to avatar image
-  rarity?: string | null;         // "common" | "rare" | "epic" | "legend" | ...
-  wave?: number | null;           // optional wave/batch number
-  isTeam?: boolean;               // apply Union team aura + label
+type CardProps = {
+  handle: string;
+  isTeam?: boolean;
 };
 
-export type CardProps = {
-  data: CardData;
-  className?: string;
-  /**
-   * Show the small CTA row beneath the card.
-   * If provided, `onCopyLink` will be used by the "Copy personal link" button.
-   */
-  showCTAs?: boolean;
-  onCopyLink?: () => void;
-  onSearchAgain?: () => void;
-};
-
-/** Capitalize rarity label nicely */
-function rarityLabel(rarity?: string | null) {
-  const r = String(rarity || "common");
-  return r.slice(0, 1).toUpperCase() + r.slice(1).toLowerCase();
-}
-
-export default function Card({
-  data,
-  className,
-  showCTAs,
-  onCopyLink,
-  onSearchAgain,
-}: CardProps) {
-  const handle = String(data.handle || "").toLowerCase().replace(/^@/, "");
-  const rarityClass = String(data.rarity || "common").toLowerCase();
-  const titleText = data.displayName || handle;
-
-  // Subtle one-shot glitch for zk* handles (mini Easter egg)
-  useEffect(() => {
-    const el = document.getElementById("uc-card");
-    if (!el) return;
-    if (!handle.includes("zk")) return;
-    let t = 0;
-    const id = setInterval(() => {
-      t++;
-      (el as HTMLElement).style.filter = `contrast(1) hue-rotate(${(Math.random() * 10 - 5).toFixed(
-        1
-      )}deg)`;
-      if (t > 14) {
-        clearInterval(id);
-        (el as HTMLElement).style.filter = "";
-      }
-    }, 60);
-    return () => clearInterval(id);
-  }, [handle]);
-
-  // Crosshair cursor for *dev* handles (another Easter egg)
-  useEffect(() => {
-    if (handle.includes("dev")) document.body.style.cursor = "crosshair";
-    return () => {
-      if (handle.includes("dev")) document.body.style.cursor = "";
-    };
-  }, [handle]);
+export default function Card({ handle, isTeam }: CardProps) {
+  const avatarUrl = `https://unavatar.io/x/${handle}`;
+  const description = isTeam
+    ? `Congratulations ${handle}, you are a core Union builder. Your vision and leadership drive the Union mission forward — shaping the future of interoperability.`
+    : `Congratulations ${handle}, you are a chosen Union Hero. Your contributions, interactions, and energy strengthen the Union ecosystem. Keep building with us.`;
 
   return (
-    <div className={`uc-cardWrap ${className ?? ""}`}>
-      <div className="uc-cardOuter">
-        <motion.div
-          id="uc-card"
-          className={`uc-card ${rarityClass} ${data.isTeam ? "team uc-teamAura" : ""}`}
-          initial={{ opacity: 0, y: -8, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        >
-          <div className="uc-shine" />
-
-          <div className="uc-headerRow">
-            <div className="uc-handle">@{handle}</div>
-            <div className="uc-badge">
-              {data.isTeam ? "Union Team" : data.wave ? `Wave ${data.wave}` : "Union"}
-            </div>
-          </div>
-
-          <div className="uc-heroImg">
-            {data.avatar ? (
-              <img
-                src={data.avatar}
-                alt={`${titleText} avatar`}
-                onError={(e: any) => (e.currentTarget.style.opacity = 0)}
-              />
-            ) : (
-              <span style={{ opacity: 0.7 }}>No avatar</span>
-            )}
-          </div>
-
-          <div className="uc-body">
-            <div className="uc-ogRow">
-              <div className="uc-og">{data.isTeam ? "CORE" : "OG"}</div>
-              <div className="uc-desc">
-                {data.isTeam
-                  ? "Union core contributor."
-                  : `${rarityLabel(data.rarity)} on the allowlist.`}
-              </div>
-            </div>
-          </div>
-        </motion.div>
+    <motion.div
+      className={`relative w-[280px] md:w-[340px] aspect-[3/5] rounded-2xl shadow-lg p-4 flex flex-col items-center justify-between ${
+        isTeam
+          ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 border-4 border-yellow-300"
+          : "bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-dark)] to-black border border-[var(--color-accent)]"
+      }`}
+      whileTap={{ scale: 0.95, rotate: 1 }}
+      animate={{ boxShadow: ["0 0 20px rgba(168,236,253,0.7)", "0 0 40px rgba(168,236,253,0.9)"] }}
+      transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+    >
+      {/* Avatar */}
+      <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--color-accent)] mb-4">
+        <Image
+          src={avatarUrl}
+          alt={`${handle} avatar`}
+          width={96}
+          height={96}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/pfp.png";
+          }}
+        />
       </div>
 
-      {showCTAs ? (
-        <div className="uc-ctaRow">
-          {onCopyLink ? (
-            <button
-              className="uc-copy"
-              onClick={() => {
-                onCopyLink();
-              }}
-            >
-              Copy personal link
-            </button>
-          ) : null}
-          {onSearchAgain ? (
-            <button className="uc-copy" onClick={onSearchAgain}>
-              Search again
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
+      {/* Title */}
+      <h2
+        className={`text-xl font-bold mb-2 ${
+          isTeam ? "text-black" : "text-[var(--color-text)]"
+        }`}
+      >
+        Union Hero’s Card
+      </h2>
+
+      {/* Description */}
+      <p
+        className={`text-center text-sm leading-snug px-2 ${
+          isTeam ? "text-black" : "text-[var(--color-muted)]"
+        }`}
+      >
+        {description}
+      </p>
+
+      {/* Buttons */}
+      <div className="flex flex-col gap-3 w-full mt-4">
+        <motion.a
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            `Just revealed my Union Hero Cards! 🎉
+
+This is my proof of participation on @union_build 🐳
+
+You can reveal yours at: union-hero-cards.vercel.app
+
+Every Transaction, Tweet, and Contribution matters at Union 💪`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full text-center py-2 rounded-lg font-bold text-white bg-[var(--color-accent)]"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          Share on X
+        </motion.a>
+
+        <button
+          className="w-full text-center py-2 rounded-lg font-medium bg-[var(--color-muted)] text-black"
+          onClick={() =>
+            navigator.clipboard.writeText(
+              `${window.location.origin}/${handle}`
+            )
+          }
+        >
+          Copy Your Card Link
+        </button>
+      </div>
+    </motion.div>
   );
 }
