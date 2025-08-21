@@ -1,47 +1,32 @@
 // app/layout.tsx
-// Minimal layout that does NOT use local fonts (so missing files won't break build)
-
 import "./globals.css";
-import Header from "../components/Header";
-import Background from "../components/Background";
+import Header from "@/components/Header";
+import Background from "@/components/Background";
 
 export const metadata = {
   title: "Union Hero Cards",
-  description:
-    "Reveal your Union Hero Card — a glowing proof of participation for Union heroes.",
-  icons: { icon: "/favicon.ico" },
-  openGraph: {
-    title: "Union Hero Cards",
-    description:
-      "Reveal your Union Hero Card — a glowing proof of participation for Union heroes.",
-    url: "https://union-hero-cards.vercel.app",
-    siteName: "Union Hero Cards",
-    images: [{ url: "/pfp.png", width: 512, height: 512, alt: "Union Hero Cards" }],
-    type: "website",
-  },
-  twitter: {
-    card: "summary",
-    title: "Union Hero Cards",
-    description:
-      "Reveal your Union Hero Card — a glowing proof of participation for Union heroes.",
-  },
+  description: "Reveal your Union Hero Card — share, flex, repeat.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://unavatar.io" crossOrigin="" />
-        <link rel="dns-prefetch" href="https://unavatar.io" />
-        <link rel="preconnect" href="https://api.dicebear.com" crossOrigin="" />
-        <link rel="dns-prefetch" href="https://api.dicebear.com" />
-        {/* Fallback CSS variables so fonts missing won't break styles */}
-        <style>{`:root{--font-supermolot: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; --font-jetbrains: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}`}</style>
+        {/* Preload logo */}
+        <link rel="preload" as="image" href="/union-logo.svg" />
+
+        {/* Preload random user avatars (pfp1–pfp14) */}
+        {Array.from({ length: 14 }, (_, i) => (
+          <link key={i} rel="preload" as="image" href={`/pfp${i + 1}.png`} />
+        ))}
+
+        {/* Preload team avatar */}
+        <link rel="preload" as="image" href="/pfp15.png" />
       </head>
-      <body className="min-h-screen bg-black text-white antialiased" style={{ position: "relative" }}>
-        <Background />
+      <body>
         <Header />
-        <main className="relative z-10 pt-16">{children}</main>
+        <Background />
+        <main style={{ paddingTop: 72 }}>{children}</main>
       </body>
     </html>
   );
