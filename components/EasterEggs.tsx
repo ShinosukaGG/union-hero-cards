@@ -1,21 +1,23 @@
-// components/ZkgmEasterEgg.tsx
+// components/EasterEggs.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { BRAND, TIMING } from "@/lib/constants";
 
-/**
- * ZKGM Easter egg:
- * - Spawns tiny "ZKGM" pop-ups at random viewport positions every TIMING.ZKGM_POP_MS
- * - Each popup fades and floats up, then is removed
- * - Respects reduced motion by not animating if user prefers reduced motion
- */
-type Popup = { id: number; x: number; y: number };
+const WORDS = ["UNION", "ZK", "GM", "🪄", "⚡", "🥚"];
 
-export default function ZkgmEasterEgg() {
-  const [popups, setPopups] = useState<Popup[]>([]);
+type Egg = {
+  id: number;
+  text: string;
+  x: number;
+  y: number;
+};
+
+export default function EasterEggs() {
+  const [eggs, setEggs] = useState<Egg[]>([]);
   const [prefersReduced, setPrefersReduced] = useState(false);
 
+  // respect reduced motion
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReduced(mq.matches);
@@ -24,22 +26,23 @@ export default function ZkgmEasterEgg() {
     return () => mq.removeEventListener?.("change", onChange);
   }, []);
 
+  // periodically spawn floating words/emojis
   useEffect(() => {
     if (prefersReduced) return;
 
     const interval = setInterval(() => {
       const id = Math.random();
-      const x = Math.random() * 92 + 2; // 2% to 94% to avoid edges
-      const y = Math.random() * 80 + 10; // 10% to 90% vertically
+      const text = WORDS[Math.floor(Math.random() * WORDS.length)];
+      const x = Math.random() * 90 + 5; // safe margins
+      const y = Math.random() * 80 + 10;
 
-      // Add new popup
-      setPopups((prev) => [...prev, { id, x, y }]);
+      setEggs((prev) => [...prev, { id, text, x, y }]);
 
-      // Auto-remove after ~2.5s (matches CSS animation)
+      // remove after animation ends (~3s)
       setTimeout(() => {
-        setPopups((prev) => prev.filter((p) => p.id !== id));
-      }, 2500);
-    }, TIMING.ZKGM_POP_MS); // ✅ use the correct constant name
+        setEggs((prev) => prev.filter((egg) => egg.id !== id));
+      }, 3000);
+    }, TIMING.CARD_PULSE_MS);
 
     return () => clearInterval(interval);
   }, [prefersReduced]);
@@ -51,20 +54,20 @@ export default function ZkgmEasterEgg() {
         position: "fixed",
         inset: 0,
         pointerEvents: "none",
-        zIndex: 30,
+        zIndex: 20,
       }}
     >
-      {popups.map((p) => (
+      {eggs.map((egg) => (
         <span
-          key={p.id}
+          key={egg.id}
           className="uc-egg"
           style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
+            left: `${egg.x}%`,
+            top: `${egg.y}%`,
             color: BRAND.ACCENT,
           }}
         >
-          ZKGM
+          {egg.text}
         </span>
       ))}
     </div>
